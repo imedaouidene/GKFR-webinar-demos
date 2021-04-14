@@ -1,0 +1,89 @@
+= Demo 3 - Webapp in Openshift
+
+This gkfr runs on a CodeReadyContainer All-In-One Openshift 4.4 cluster. You can download and install CodeReady Container
+using the link below:
+https://developers.redhat.com/blog/2019/09/05/red-hat-openshift-4-on-your-laptop-introducing-red-hat-codeready-containers/
+
+
+== Content
+
+[source,text]
+----
+[root@gkfr1vm8 rha-2020-gkfrs]# tree gkfr3/ -a
+gkfr3/
+├── files
+│   └── index.html
+├── README.adoc
+├── remove_ocp_app.sh
+└── setup_ocp_app.sh
+
+1 directory, 4 files
+----
+
+== Demo 3
+
+Web application on Openshift (CRC)
+1 Log into CRC as developer
+
+[source,text]
+----
+[gkfr@gkfr RHA-2020]$ oc login -u developer -p developer https://api.crc.testing:6443
+----
+
+2 Create a project
+[source, text]
+----
+[gkfr@gkfr RHA-2020]$ oc new-project webinar
+----
+
+*3 Create the webapp using Github and S2I*
+With S2I we can let the Openshift cluster take care of the heavy lifting in application deployment. We only need to
+tell S2I which language we use for our app and S2I will sort out the rest.
+
+[source, text]
+----
+[gkfr@gkfr RHA-2020]$  oc new-app httpd~http://github.com/rmegens/rha-2020-gkfrs \
+--context-dir=gkfr3/files/ --name my-webapps2i
+----
+
+*4 Show the build process*
+We can see the progression of the build process
+[source, text]
+----
+[gkfr@gkfr RHA-2020]$ oc get all
+[gkfr@gkfr RHA-2020]$ oc logs
+----
+
+*5 Create a route to access the webpage from outside the cluster*
+[source, text]
+----
+[gkfr@gkfr RHA-2020]$ oc expose svc {name of the service}
+[gkfr@gkfr RHA-2020]$ oc get route
+----
+
+*6 Show the web-page in a webbrowser*
+Using the webbrowser on the local machine, we can enter the url as given by 'oc get route'.
+
+
+*7 Show running processes on the host*
+[source, text]
+----
+[gkfr@gkfr RHA-2020]$ ps aux | grep http
+[gkfr@gkfr RHA-2020]$ pstree
+----
+
+NOTE: You should not see running processes on your node!
+
+
+*8 Show running processes in the pod*
+[source, text]
+----
+[gkfr@gkfr RHA-2020]$ oc rsh my-webapps2i-1-p6xmx
+sh-4.2$
+
+sh-4.2$ ps aux | grep httpd
+
+sh-4.2$ exit
+exit
+[gkfr@gkfr RHA-2020]$
+----
